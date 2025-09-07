@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Malbacoo's Base Multicoder</title>
+  <title>Malbacoo's Multicoder</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -96,6 +96,8 @@
       position: relative;
       min-height: 50px;
       word-wrap: break-word;
+      max-height: 200px; /* Limit height */
+      overflow-y: auto; /* Scroll if content is too long */
     }
     .result-text {
       flex: 1;
@@ -122,7 +124,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>Malbacoo's Base Multicoder</h1>
+    <h1>Malbacoo's Multicoder</h1>
     <textarea id="input" placeholder="Enter text or encoded string here..."></textarea>
     <select id="baseSelect">
       <option value="base64">Base64</option>
@@ -153,7 +155,6 @@
 
     let encodeMode = false;
 
-    // Update the indicator color and scale
     function updateIndicator() {
       modeIndicator.style.background = encodeMode ? '#0f0' : '#ff0';
       modeIndicator.style.transform = encodeMode ? 'scale(1)' : 'scale(1.2)';
@@ -167,7 +168,7 @@
       runBtn.textContent = encodeMode ? 'Encode' : 'Decode';
       toggleBtn.childNodes[2].textContent = encodeMode ? 'Switch to Decode' : 'Switch to Encode';
       baseSelect.style.display = 'block';
-      updateIndicator(); // animate/update indicator on toggle
+      updateIndicator();
     });
 
     runBtn.addEventListener('click', () => {
