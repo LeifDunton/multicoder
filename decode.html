@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Malbacoo's Base Multicoder</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1f1c2c, #928DAB);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      text-align: center;
+      width: 400px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: fadeIn 0.8s ease-in-out;
+    }
+    h1 {
+      margin-bottom: 20px;
+      font-size: 1.6em;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      border-radius: 10px;
+      border: none;
+      padding: 10px;
+      font-size: 1em;
+      resize: none;
+      margin-bottom: 15px;
+      box-sizing: border-box;
+    }
+    select, button {
+      padding: 10px 15px;
+      border-radius: 10px;
+      border: none;
+      font-size: 1em;
+      margin: 8px 0;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    select {
+      background: #2e2e2e;
+      color: #fff;
+      width: 60%;
+    }
+    button {
+      background: #4CAF50;
+      color: #fff;
+    }
+    button:hover {
+      background: #45a049;
+      transform: scale(1.05);
+    }
+    .toggle {
+      background: #2196F3;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .toggle:hover {
+      background: #1976D2;
+    }
+    .mode-indicator {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      transition: background 0.4s, transform 0.4s;
+    }
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .result-container {
+      margin-top: 20px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 10px;
+      position: relative;
+      min-height: 50px;
+      word-wrap: break-word;
+    }
+    .result-text {
+      flex: 1;
+      color: #fff;
+      overflow-wrap: anywhere;
+    }
+    .copy-btn {
+      background: transparent;
+      border: none;
+      color: #0f0;
+      cursor: pointer;
+      font-size: 1.2em;
+      margin-left: 10px;
+      transition: transform 0.2s;
+    }
+    .copy-btn:hover {
+      transform: scale(1.2);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Malbacoo's Base Multicoder</h1>
+    <textarea id="input" placeholder="Enter text or encoded string here..."></textarea>
+    <select id="baseSelect">
+      <option value="base64">Base64</option>
+      <option value="base32">Base32</option>
+    </select>
+    <div class="button-group">
+      <button id="toggleMode" class="toggle">
+        <div class="mode-indicator" id="modeIndicator"></div>
+        Switch to Encode
+      </button>
+      <button id="run">Decode</button>
+    </div>
+    <div class="result-container" style="display:none;">
+      <div id="result" class="result-text"></div>
+      <button class="copy-btn" title="Copy" id="copyBtn">📋</button>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById('input');
+    const resultContainer = document.querySelector('.result-container');
+    const resultText = document.getElementById('result');
+    const runBtn = document.getElementById('run');
+    const toggleBtn = document.getElementById('toggleMode');
+    const baseSelect = document.getElementById('baseSelect');
+    const copyBtn = document.getElementById('copyBtn');
+    const modeIndicator = document.getElementById('modeIndicator');
+
+    let encodeMode = false;
+
+    // Update the indicator color and scale
+    function updateIndicator() {
+      modeIndicator.style.background = encodeMode ? '#0f0' : '#ff0';
+      modeIndicator.style.transform = encodeMode ? 'scale(1)' : 'scale(1.2)';
+    }
+
+    // Initialize indicator on page load
+    updateIndicator();
+
+    toggleBtn.addEventListener('click', () => {
+      encodeMode = !encodeMode;
+      runBtn.textContent = encodeMode ? 'Encode' : 'Decode';
+      toggleBtn.childNodes[2].textContent = encodeMode ? 'Switch to Decode' : 'Switch to Encode';
+      baseSelect.style.display = 'block';
+      updateIndicator(); // animate/update indicator on toggle
+    });
+
+    runBtn.addEventListener('click', () => {
+      const text = input.value.trim();
+      const base = baseSelect.value;
+      try {
+        let output = '';
+        if (encodeMode) {
+          output = base === 'base64' ? btoa(text) : base32Encode(text);
+        } else {
+          output = base === 'base64' ? atob(text) : base32Decode(text);
+        }
+        resultContainer.style.display = 'flex';
+        resultText.textContent = output;
+      } catch (e) {
+        resultContainer.style.display = 'flex';
+        resultText.textContent = 'Error: Invalid input!';
+      }
+    });
+
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(resultText.textContent).then(() => {
+        copyBtn.textContent = '✅';
+        setTimeout(() => copyBtn.textContent = '📋', 1000);
+      });
+    });
+
+    // Base32 implementation
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    function base32Encode(str) {
+      let binary = '';
+      for (let i = 0; i < str.length; i++) {
+        binary += str.charCodeAt(i).toString(2).padStart(8, '0');
+      }
+      let output = '';
+      for (let i = 0; i < binary.length; i += 5) {
+        const chunk = binary.substr(i, 5).padEnd(5, '0');
+        output += alphabet[parseInt(chunk, 2)];
+      }
+      while (output.length % 8 !== 0) output += '=';
+      return output;
+    }
+
+    function base32Decode(str) {
+      str = str.replace(/=+$/, '');
+      let binary = '';
+      for (let i = 0; i < str.length; i++) {
+        const val = alphabet.indexOf(str[i].toUpperCase());
+        if (val === -1) throw new Error("Invalid base32 character");
+        binary += val.toString(2).padStart(5, '0');
+      }
+      let output = '';
+      for (let i = 0; i < binary.length; i += 8) {
+        const byte = binary.substr(i, 8);
+        if (byte.length === 8) output += String.fromCharCode(parseInt(byte, 2));
+      }
+      return output;
+    }
+  </script>
+</body>
+</html>
